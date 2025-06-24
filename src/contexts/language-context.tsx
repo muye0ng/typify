@@ -1,8 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-
-type Language = 'en' | 'ko'
+import { setLanguageCookie, getStoredLanguage, getBrowserLanguage, type Language } from '@/lib/language-utils'
 
 interface LanguageContextType {
   language: Language
@@ -21,13 +20,13 @@ const translations = {
     'nav.faq': 'FAQ',
     'header.signin': 'Sign In',
     'header.freetrial': 'Free Trial',
+    'header.dashboard': 'Dashboard',
     'header.language': 'English',
     
     // Hero Section
     'hero.badge': 'AI-Powered Social Media Management',
     'hero.title1': 'AI Manages Your',
     'hero.title2': 'Social Media',
-    'hero.title3': '24/7',
     'hero.subtitle': 'From personal branding to business marketing\nStop worrying about daily social content. Let AI handle it for you.',
     'hero.cta.primary': 'Start Free Trial',
     'hero.cta.secondary': 'Watch Demo',
@@ -134,7 +133,7 @@ const translations = {
     'cta.subtitle1': 'Stop worrying about daily SNS content',
     'cta.brandname': 'AI-powered Typify',
     'cta.subtitle2': 'automates everything for you',
-    'cta.button': 'Start 14-Day Free Trial',
+    'cta.button.trial': 'Start 14-Day Free Trial',
     'cta.nocard': '✓ No credit card required',
     'cta.cancel': '✓ Cancel anytime',
     'cta.feature1.title': 'Instant Start',
@@ -177,9 +176,7 @@ const translations = {
     'footer.refund': 'Refund Policy',
     'footer.copyright': '© 2025 Typify. All rights reserved.',
     
-    // Features section
-    'features.title': 'Powerful AI Features for\nPerfect Social Media Management',
-    'features.subtitle': 'Manage your social media smarter with cutting-edge AI technology',
+    // Features cards
     'features.card1.title': 'Tone Learning',
     'features.card1.desc': 'AI analyzes your writing style',
     'features.card1.highlight': 'Personal style analysis',
@@ -196,9 +193,7 @@ const translations = {
     'features.stats.satisfaction': 'User Satisfaction',
     'features.stats.engagement': 'Average Engagement Boost',
     
-    // Solution section
-    'solution.title': 'Complete SNS Management\nin Just 3 Steps',
-    'solution.subtitle': 'Start easily without complex setup',
+    // Solution steps
     'solution.step1.title': 'Connect',
     'solution.step1.desc': 'Link your X or Threads account in one click',
     'solution.step2.title': 'Learn',
@@ -209,6 +204,289 @@ const translations = {
     'solution.coming': 'Coming Soon',
     'solution.setup.time': 'Average Setup Time: Under 5 minutes',
     'solution.setup.desc': 'Anyone can easily start AI SNS management without complex settings or expertise.',
+    
+    // Dashboard
+    'dashboard.welcome': 'Welcome back! 👋',
+    'dashboard.subtitle': 'Ready to create engaging content for your audience?',
+    'dashboard.generate': 'Generate New Content',
+    'dashboard.generate.desc': 'Create AI-powered posts tailored to your style',
+    'dashboard.schedule': 'Schedule Posts',
+    'dashboard.schedule.desc': 'Plan and automate your content calendar',
+    'dashboard.monthlyUsage': 'Monthly Usage',
+    'dashboard.thisWeek': 'This Week',
+    'dashboard.currentPlan': 'Current Plan',
+    'dashboard.recentPosts': 'Recent Posts',
+    'dashboard.viewAll': 'View All',
+    'dashboard.noPosts': 'No posts yet',
+    'dashboard.createFirst': 'Create your first post to get started',
+    'dashboard.upgrade': 'Unlock More with Basic Plan',
+    'dashboard.upgradeDesc': 'Get 100 posts per month, advanced analytics, and priority support',
+    'dashboard.upgradeNow': 'Upgrade Now',
+    'dashboard.postsPublished': 'Posts published',
+    'dashboard.engagement': 'engagement',
+    'dashboard.noDataYet': 'No data yet',
+    'dashboard.runningLow': 'Running low on posts',
+    'dashboard.resetsIn': 'Resets in',
+    'dashboard.days': 'days',
+    'dashboard.loading': 'Loading...',
+    'dashboard.checkingSetup': 'Checking setup...',
+    
+    // Onboarding
+    'onboarding.step1.title': 'What\'s your role?',
+    'onboarding.step1.subtitle': 'This helps us personalize your experience',
+    'onboarding.step2.title': 'What\'s your style?',
+    'onboarding.step2.subtitle': 'Choose the tone that matches your brand',
+    'onboarding.step3.title': 'What topics interest you?',
+    'onboarding.step3.subtitle': 'Select up to 5 topics you\'d like to post about',
+    'onboarding.step4.title': 'Choose your platform',
+    'onboarding.step4.subtitle': 'Select one platform to get started',
+    'onboarding.step4.lockNote': 'You can change this after one week',
+    'onboarding.step4.proNote': '🎯 With Pro plan, you can use both X and Threads platforms',
+    'onboarding.next': 'Next',
+    'onboarding.complete': 'Get Started',
+    'onboarding.back': 'Back',
+    
+    // Industries
+    'industry.marketer': 'Marketer',
+    'industry.marketer.desc': 'Marketing & Growth',
+    'industry.developer': 'Developer',
+    'industry.developer.desc': 'Tech & Programming',
+    'industry.entrepreneur': 'Entrepreneur',
+    'industry.entrepreneur.desc': 'Business & Startups',
+    'industry.creator': 'Creator',
+    'industry.creator.desc': 'Content & Creative',
+    'industry.other': 'Other',
+    'industry.other.desc': 'Something else',
+    
+    // Tones
+    'tone.professional': 'Professional',
+    'tone.professional.desc': 'Formal and business-like',
+    'tone.friendly': 'Friendly',
+    'tone.friendly.desc': 'Warm and approachable',
+    'tone.inspirational': 'Inspirational',
+    'tone.inspirational.desc': 'Motivating and uplifting',
+    'tone.casual': 'Casual',
+    'tone.casual.desc': 'Relaxed and conversational',
+    'tone.witty': 'Witty',
+    'tone.witty.desc': 'Clever and humorous',
+    
+    // Posts
+    'posts.title': 'Your Posts',
+    'posts.subtitle': 'Manage and track all your content',
+    'posts.createNew': 'Create New Post',
+    'posts.searchPlaceholder': 'Search posts...',
+    'posts.filterAll': 'All Status',
+    'posts.filterPublished': 'Published',
+    'posts.filterScheduled': 'Scheduled',
+    'posts.filterDraft': 'Draft',
+    'posts.filterFailed': 'Failed',
+    'posts.noPosts': 'No posts yet',
+    'posts.noPostsDesc': 'Create your first post to get started with content generation',
+    'posts.createFirst': 'Create Your First Post',
+    'posts.loading': 'Loading posts...',
+    
+    // Generate
+    'generate.title': 'Generate Content',
+    'generate.subtitle': 'Create engaging social media posts with AI',
+    'generate.usageLabel': 'Usage this month',
+    'generate.upgrade': 'Upgrade Plan',
+    'generate.formTitle': 'Content Settings',
+    'generate.topicLabel': 'Topic',
+    'generate.topicPlaceholder': 'What would you like to post about?',
+    'generate.toneLabel': 'Tone',
+    'generate.toneProfessional': 'Professional',
+    'generate.toneCasual': 'Casual',
+    'generate.toneFriendly': 'Friendly',
+    'generate.toneHumorous': 'Humorous',
+    'generate.toneSerious': 'Serious',
+    'generate.toneInspiring': 'Inspiring',
+    'generate.platformLabel': 'Platform',
+    'generate.lengthLabel': 'Length',
+    'generate.includeHashtags': 'Include Hashtags',
+    'generate.includeEmojis': 'Include Emojis',
+    'generate.generateButton': 'Generate Content',
+    'generate.generating': 'Generating...',
+    'generate.limitReached': 'Monthly limit reached. Upgrade to continue.',
+    'generate.generatedTitle': 'Generated Content',
+    'generate.schedule': 'Schedule',
+    'generate.publishNow': 'Publish Now',
+    'generate.noContentTitle': 'Ready to Create',
+    'generate.noContentDesc': 'Fill out the form and click Generate to create your content',
+    
+    // Schedule
+    'schedule.title': 'Content Schedule',
+    'schedule.subtitle': 'Manage your scheduled posts',
+    'schedule.scheduleNew': 'Schedule New Post',
+    'schedule.calendarView': 'Calendar',
+    'schedule.listView': 'List',
+    'schedule.searchPlaceholder': 'Search scheduled posts...',
+    'schedule.filterAll': 'All Status',
+    'schedule.filterScheduled': 'Scheduled',
+    'schedule.filterPaused': 'Paused',
+    'schedule.filterFailed': 'Failed',
+    'schedule.noScheduled': 'No scheduled posts',
+    'schedule.noScheduledDesc': 'Create and schedule your first post to see it here',
+    'schedule.scheduleFirst': 'Schedule Your First Post',
+    'schedule.loading': 'Loading schedule...',
+    
+    // Analytics
+    'analytics.title': 'Analytics',
+    'analytics.subtitle': 'Track your content performance',
+    'analytics.last7Days': 'Last 7 days',
+    'analytics.last30Days': 'Last 30 days',
+    'analytics.last90Days': 'Last 90 days',
+    'analytics.refresh': 'Refresh',
+    'analytics.export': 'Export',
+    'analytics.totalPosts': 'Total Posts',
+    'analytics.totalEngagement': 'Total Engagement',
+    'analytics.totalReach': 'Total Reach',
+    'analytics.engagementRate': 'Engagement Rate',
+    'analytics.platformComparison': 'Platform Comparison',
+    'analytics.topPosts': 'Top Performing Posts',
+    'analytics.noTopPosts': 'No posts data available yet',
+    'analytics.engagementTrends': 'Engagement Trends',
+    'analytics.chartPlaceholder': 'Interactive charts coming soon',
+    'analytics.noData': 'No analytics data yet',
+    'analytics.noDataDesc': 'Start posting content to see your analytics here',
+    'analytics.createFirstPost': 'Create Your First Post',
+    'analytics.loading': 'Loading analytics...',
+    
+    // Settings
+    'settings.title': 'Settings',
+    'settings.subtitle': 'Manage your account preferences',
+    'settings.save': 'Save Changes',
+    'settings.saving': 'Saving...',
+    'settings.profile': 'Profile',
+    'settings.notifications': 'Notifications',
+    'settings.socialAccounts': 'Social Accounts',
+    'settings.billing': 'Billing',
+    'settings.dangerZone': 'Danger Zone',
+    'settings.profileSettings': 'Profile Settings',
+    'settings.name': 'Full Name',
+    'settings.email': 'Email Address',
+    'settings.emailNote': 'Email cannot be changed after registration',
+    'settings.language': 'Language',
+    'settings.timezone': 'Timezone',
+    'settings.notificationSettings': 'Notification Settings',
+    'settings.emailNotifications': 'Email Notifications',
+    'settings.emailNotificationsDesc': 'Receive notifications via email',
+    'settings.postPublished': 'Post Published',
+    'settings.postPublishedDesc': 'When your posts are successfully published',
+    'settings.postFailed': 'Post Failed',
+    'settings.postFailedDesc': 'When your posts fail to publish',
+    'settings.weeklyReport': 'Weekly Report',
+    'settings.weeklyReportDesc': 'Weekly summary of your activity',
+    'settings.monthlyReport': 'Monthly Report',
+    'settings.monthlyReportDesc': 'Monthly analytics and insights',
+    'settings.socialAccountSettings': 'Social Account Settings',
+    'settings.notConnected': 'Not connected',
+    'settings.connect': 'Connect',
+    'settings.disconnect': 'Disconnect',
+    'settings.billingSettings': 'Billing Settings',
+    'settings.currentPlan': 'Current Plan',
+    'settings.upgrade': 'Upgrade',
+    'settings.nextBilling': 'Next Billing Date',
+    'settings.dangerZoneTitle': 'Danger Zone',
+    'settings.deleteAccount': 'Delete Account',
+    'settings.deleteAccountWarning': 'This action cannot be undone. All your data will be permanently deleted.',
+    'settings.loading': 'Loading settings...',
+    
+    // Auth
+    'auth.welcomeBack': 'Welcome back',
+    'auth.signInContinue': 'Sign in to continue to your dashboard',
+    'auth.continueWithGoogle': 'Continue with Google',
+    'auth.signingIn': 'Signing in...',
+    'auth.or': 'Or',
+    'auth.noAccount': "Don't have an account?",
+    'auth.signUpFree': 'Sign up for free',
+    'auth.byContinuing': 'By continuing, you agree to our',
+    'auth.termsOfService': 'Terms of Service',
+    'auth.and': 'and',
+    'auth.privacyPolicy': 'Privacy Policy',
+    'auth.createAccount': 'Create your account',
+    'auth.getStarted': 'Get started with your free account',
+    'auth.alreadyHaveAccount': 'Already have an account?',
+    'auth.signIn': 'Sign in',
+    'auth.startForFree': 'Start for free',
+    'auth.joinThousands': 'Join thousands automating their social media',
+    'auth.freePlanIncludes': 'Free plan includes:',
+    'auth.freePostsMonth': '10 free posts per month',
+    'auth.allTemplates': 'All industry templates',
+    'auth.autoScheduling': 'Automatic scheduling',
+    'auth.basicAnalytics': 'Basic analytics',
+    'auth.signUpWithGoogle': 'Sign up with Google',
+    'auth.creatingAccount': 'Creating account...',
+    'auth.signOut': 'Sign Out',
+    'auth.completing': 'Completing sign in...',
+    'auth.pleaseWait': 'Please wait while we set up your account',
+    'auth.signInSuccessful': 'Sign in successful!',
+    'auth.redirecting': 'Redirecting to your dashboard...',
+    'auth.signInFailed': 'Sign in failed',
+    'auth.closeWindow': 'Close window',
+    'auth.bySigningUp': 'By signing up, you agree to our',
+    
+    // Navigation
+    'nav.dashboard': 'Dashboard',
+    'nav.generate': 'Generate',
+    'nav.schedule': 'Schedule',
+    'nav.analytics': 'Analytics',
+    'nav.posts': 'Posts',
+    'nav.settings': 'Settings',
+    
+    // Common
+    'common.guest': 'Guest',
+    'common.professional': 'Professional',
+    'common.casual': 'Casual',
+    'common.friendly': 'Friendly',
+    'common.serious': 'Serious',
+    'common.inspiring': 'Inspiring',
+    'common.formalAuth': 'Formal and authoritative',
+    'common.selectPlatform': 'Selected during onboarding',
+    'common.changeAvailable': 'Change available after',
+    'common.scheduled': 'Scheduled for',
+    'common.at': 'at',
+    'common.failedToLoad': 'Failed to load dashboard',
+    'common.tryAgain': 'Try Again',
+    'common.productivity': 'Productivity',
+    'common.creativeProcess': 'Creative Process',
+    'common.more': 'more',
+    'common.short': 'Short',
+    'common.medium': 'Medium',
+    'common.long': 'Long',
+    'common.characters.short': '50-100 characters',
+    'common.characters.medium': '100-200 characters',
+    'common.characters.long': '200+ characters',
+    'common.tryAgain': 'Try Again',
+    'common.cancel': 'Cancel',
+    'common.comingSoon': 'Coming Soon',
+    'common.selectPlatform': 'Selected during onboarding',
+    'common.changeAvailable': 'Change available after',
+    'common.pleaseComplete': 'Please complete onboarding to select your platform.',
+    'common.failedToLoad': 'Failed to load dashboard',
+    'common.authRequired': 'Authentication required',
+    'common.failedToGenerate': 'Failed to generate content',
+    'common.deleteConfirm': 'Type "DELETE" to confirm',
+    'common.professional': 'Professional',
+    'common.casual': 'Casual',
+    'common.friendly': 'Friendly',
+    'common.humorous': 'Humorous',
+    'common.serious': 'Serious',
+    'common.inspiring': 'Inspiring',
+    'common.formalAuth': 'Formal and authoritative',
+    'common.productivity': 'Productivity',
+    'common.creativeProcess': 'Creative Process',
+    'common.shareThoughts': 'Share your thoughts in 280 characters',
+    'common.postsPerMonth.10': '10 posts/month',
+    'common.postsPerMonth.100': '100 posts/month',
+    'common.postsPerMonth.500': '500 posts/month',
+    'common.xTwitter': 'X (Twitter)',
+    'common.threads': 'Threads',
+    
+    // Timezones
+    'timezone.seoul': 'Seoul (UTC+9)',
+    'timezone.newYork': 'New York (UTC-5)',
+    'timezone.losAngeles': 'Los Angeles (UTC-8)',
+    'timezone.london': 'London (UTC+0)',
   },
   ko: {
     // Header
@@ -218,13 +496,13 @@ const translations = {
     'nav.faq': 'FAQ',
     'header.signin': '로그인',
     'header.freetrial': '무료 체험',
+    'header.dashboard': '대시보드',
     'header.language': '한국어',
     
     // Hero Section
     'hero.badge': 'AI 기반 소셜미디어 관리',
     'hero.title1': 'AI가 당신의',
-    'hero.title2': 'SNS를 24시간',
-    'hero.title3': '관리합니다',
+    'hero.title2': 'SNS를 24시간 관리합니다',
     'hero.subtitle': '개인 브랜딩부터 비즈니스 마케팅까지\n매일 SNS 콘텐츠 고민 끝. 이제 AI가 대신 해드립니다.',
     'hero.cta.primary': '무료 체험 시작',
     'hero.cta.secondary': '데모 보기',
@@ -331,7 +609,7 @@ const translations = {
     'cta.subtitle1': '매일 SNS 콘텐츠 고민하지 마세요',
     'cta.brandname': 'AI 기반의 Typify',
     'cta.subtitle2': '가 모든 것을 자동화해드립니다',
-    'cta.button': '14일 무료 체험 시작하기',
+    'cta.button.trial': '14일 무료 체험 시작하기',
     'cta.nocard': '✓ 신용카드 필요 없음',
     'cta.cancel': '✓ 언제든 취소 가능',
     'cta.feature1.title': '즉시 시작',
@@ -374,9 +652,7 @@ const translations = {
     'footer.refund': '환불 정책',
     'footer.copyright': '© 2025 Typify. All rights reserved.',
     
-    // Features section
-    'features.title': '강력한 AI 기능으로\n완벽한 SNS 관리',
-    'features.subtitle': '첨단 AI 기술로 당신의 SNS를 더 스마트하게 관리하세요',
+    // Features cards
     'features.card1.title': '톤앤매너 학습',
     'features.card1.desc': 'AI가 당신의 글쓰기 스타일을 분석',
     'features.card1.highlight': '개인 맞춤 스타일 분석',
@@ -393,9 +669,7 @@ const translations = {
     'features.stats.satisfaction': '사용자 만족도',
     'features.stats.engagement': '평균 참여율 향상',
     
-    // Solution section
-    'solution.title': '단 3단계로\nSNS 운영 완료',
-    'solution.subtitle': '복잡한 설정 없이 간단하게 시작하세요',
+    // Solution steps
     'solution.step1.title': '연결',
     'solution.step1.desc': 'X 또는 Threads 계정을 원클릭으로 연결',
     'solution.step2.title': '학습',
@@ -406,25 +680,333 @@ const translations = {
     'solution.coming': '곧 업데이트 예정',
     'solution.setup.time': '평균 설정 시간: 5분 이내',
     'solution.setup.desc': '복잡한 설정이나 전문 지식 없이도 누구나 쉽게 AI SNS 관리를 시작할 수 있습니다.',
+    
+    // Dashboard
+    'dashboard.welcome': '다시 오신 것을 환영합니다! 👋',
+    'dashboard.subtitle': '당신의 청중을 위한 매력적인 콘텐츠를 만들 준비가 되셨나요?',
+    'dashboard.generate': '새 콘텐츠 생성',
+    'dashboard.generate.desc': '당신의 스타일에 맞춘 AI 기반 게시물을 만드세요',
+    'dashboard.schedule': '게시물 예약',
+    'dashboard.schedule.desc': '콘텐츠 캘린더를 계획하고 자동화하세요',
+    'dashboard.monthlyUsage': '월간 사용량',
+    'dashboard.thisWeek': '이번 주',
+    'dashboard.currentPlan': '현재 플랜',
+    'dashboard.recentPosts': '최근 게시물',
+    'dashboard.viewAll': '모두 보기',
+    'dashboard.noPosts': '아직 게시물이 없습니다',
+    'dashboard.createFirst': '첫 번째 게시물을 만들어 시작하세요',
+    'dashboard.upgrade': 'Basic 플랜으로 더 많은 기능 이용하기',
+    'dashboard.upgradeDesc': '월 100개 게시물, 고급 분석, 우선 지원을 받으세요',
+    'dashboard.upgradeNow': '지금 업그레이드',
+    'dashboard.postsPublished': '게시물 발행됨',
+    'dashboard.engagement': '참여율',
+    'dashboard.noDataYet': '아직 데이터가 없습니다',
+    'dashboard.runningLow': '게시물이 부족합니다',
+    'dashboard.resetsIn': '다음 리셋까지',
+    'dashboard.days': '일',
+    'dashboard.loading': '로딩 중...',
+    'dashboard.checkingSetup': '설정 확인 중...',
+    
+    // Onboarding
+    'onboarding.step1.title': '어떤 역할이신가요?',
+    'onboarding.step1.subtitle': '맞춤형 경험을 제공하기 위해 필요합니다',
+    'onboarding.step2.title': '어떤 스타일을 선호하시나요?',
+    'onboarding.step2.subtitle': '브랜드에 맞는 톤을 선택해주세요',
+    'onboarding.step3.title': '어떤 주제에 관심이 있으신가요?',
+    'onboarding.step3.subtitle': '게시하고 싶은 주제를 최대 5개까지 선택해주세요',
+    'onboarding.step4.title': '플랫폼을 선택해주세요',
+    'onboarding.step4.subtitle': '시작할 플랫폼을 하나 선택해주세요',
+    'onboarding.step4.lockNote': '일주일 후에 변경 가능합니다',
+    'onboarding.step4.proNote': '🎯 Pro 플랜 선택 시 X, Threads 두 플랫폼을 모두 사용할 수 있습니다',
+    'onboarding.next': '다음',
+    'onboarding.complete': '시작하기',
+    'onboarding.back': '이전',
+    
+    // Industries
+    'industry.marketer': '마케터',
+    'industry.marketer.desc': '마케팅 & 성장',
+    'industry.developer': '개발자',
+    'industry.developer.desc': '기술 & 프로그래밍',
+    'industry.entrepreneur': '기업가',
+    'industry.entrepreneur.desc': '비즈니스 & 스타트업',
+    'industry.creator': '크리에이터',
+    'industry.creator.desc': '콘텐츠 & 창작',
+    'industry.other': '기타',
+    'industry.other.desc': '다른 분야',
+    
+    // Tones
+    'tone.professional': '전문적',
+    'tone.professional.desc': '공식적이고 비즈니스적인',
+    'tone.friendly': '친근한',
+    'tone.friendly.desc': '따뜻하고 접근하기 쉬운',
+    'tone.inspirational': '영감을 주는',
+    'tone.inspirational.desc': '동기부여적이고 고무적인',
+    'tone.casual': '캐주얼',
+    'tone.casual.desc': '편안하고 대화하는 듯한',
+    'tone.witty': '재치있는',
+    'tone.witty.desc': '영리하고 유머러스한',
+    
+    // Posts
+    'posts.title': '게시물 관리',
+    'posts.subtitle': '모든 콘텐츠를 관리하고 추적하세요',
+    'posts.createNew': '새 게시물 만들기',
+    'posts.searchPlaceholder': '게시물 검색...',
+    'posts.filterAll': '전체 상태',
+    'posts.filterPublished': '발행됨',
+    'posts.filterScheduled': '예약됨',
+    'posts.filterDraft': '초안',
+    'posts.filterFailed': '실패',
+    'posts.noPosts': '아직 게시물이 없습니다',
+    'posts.noPostsDesc': '첫 번째 게시물을 만들어 콘텐츠 생성을 시작하세요',
+    'posts.createFirst': '첫 번째 게시물 만들기',
+    'posts.loading': '게시물 로딩 중...',
+    
+    // Generate
+    'generate.title': '콘텐츠 생성',
+    'generate.subtitle': 'AI로 매력적인 소셜미디어 게시물을 만드세요',
+    'generate.usageLabel': '이번 달 사용량',
+    'generate.upgrade': '플랜 업그레이드',
+    'generate.formTitle': '콘텐츠 설정',
+    'generate.topicLabel': '주제',
+    'generate.topicPlaceholder': '무엇에 대해 게시하고 싶으신가요?',
+    'generate.toneLabel': '톤',
+    'generate.toneProfessional': '전문적',
+    'generate.toneCasual': '캐주얼',
+    'generate.toneFriendly': '친근한',
+    'generate.toneHumorous': '유머러스',
+    'generate.toneSerious': '진지한',
+    'generate.toneInspiring': '영감을 주는',
+    'generate.platformLabel': '플랫폼',
+    'generate.lengthLabel': '길이',
+    'generate.includeHashtags': '해시태그 포함',
+    'generate.includeEmojis': '이모지 포함',
+    'generate.generateButton': '콘텐츠 생성',
+    'generate.generating': '생성 중...',
+    'generate.limitReached': '월간 한도에 도달했습니다. 업그레이드해서 계속 사용하세요.',
+    'generate.generatedTitle': '생성된 콘텐츠',
+    'generate.schedule': '예약',
+    'generate.publishNow': '지금 발행',
+    'generate.noContentTitle': '생성 준비 완료',
+    'generate.noContentDesc': '양식을 작성하고 생성 버튼을 클릭하여 콘텐츠를 만드세요',
+    
+    // Schedule
+    'schedule.title': '콘텐츠 스케줄',
+    'schedule.subtitle': '예약된 게시물을 관리하세요',
+    'schedule.scheduleNew': '새 게시물 예약',
+    'schedule.calendarView': '달력',
+    'schedule.listView': '목록',
+    'schedule.searchPlaceholder': '예약된 게시물 검색...',
+    'schedule.filterAll': '전체 상태',
+    'schedule.filterScheduled': '예약됨',
+    'schedule.filterPaused': '일시정지',
+    'schedule.filterFailed': '실패',
+    'schedule.noScheduled': '예약된 게시물이 없습니다',
+    'schedule.noScheduledDesc': '첫 번째 게시물을 만들고 예약해보세요',
+    'schedule.scheduleFirst': '첫 번째 게시물 예약하기',
+    'schedule.loading': '스케줄 로딩 중...',
+    
+    // Analytics
+    'analytics.title': '분석',
+    'analytics.subtitle': '콘텐츠 성과를 추적하세요',
+    'analytics.last7Days': '최근 7일',
+    'analytics.last30Days': '최근 30일',
+    'analytics.last90Days': '최근 90일',
+    'analytics.refresh': '새로고침',
+    'analytics.export': '내보내기',
+    'analytics.totalPosts': '총 게시물',
+    'analytics.totalEngagement': '총 참여',
+    'analytics.totalReach': '총 도달',
+    'analytics.engagementRate': '참여율',
+    'analytics.platformComparison': '플랫폼 비교',
+    'analytics.topPosts': '인기 게시물',
+    'analytics.noTopPosts': '아직 게시물 데이터가 없습니다',
+    'analytics.engagementTrends': '참여 트렌드',
+    'analytics.chartPlaceholder': '인터랙티브 차트 곧 출시',
+    'analytics.noData': '아직 분석 데이터가 없습니다',
+    'analytics.noDataDesc': '콘텐츠 게시를 시작하여 분석을 확인하세요',
+    'analytics.createFirstPost': '첫 번째 게시물 만들기',
+    'analytics.loading': '분석 로딩 중...',
+    
+    // Settings
+    'settings.title': '설정',
+    'settings.subtitle': '계정 환경설정을 관리하세요',
+    'settings.save': '변경사항 저장',
+    'settings.saving': '저장 중...',
+    'settings.profile': '프로필',
+    'settings.notifications': '알림',
+    'settings.socialAccounts': '소셜 계정',
+    'settings.billing': '결제',
+    'settings.dangerZone': '위험 구역',
+    'settings.profileSettings': '프로필 설정',
+    'settings.name': '이름',
+    'settings.email': '이메일 주소',
+    'settings.emailNote': '이메일은 가입 후 변경할 수 없습니다',
+    'settings.language': '언어',
+    'settings.timezone': '시간대',
+    'settings.notificationSettings': '알림 설정',
+    'settings.emailNotifications': '이메일 알림',
+    'settings.emailNotificationsDesc': '이메일로 알림 받기',
+    'settings.postPublished': '게시물 발행',
+    'settings.postPublishedDesc': '게시물이 성공적으로 발행되었을 때',
+    'settings.postFailed': '게시물 실패',
+    'settings.postFailedDesc': '게시물 발행이 실패했을 때',
+    'settings.weeklyReport': '주간 리포트',
+    'settings.weeklyReportDesc': '주간 활동 요약',
+    'settings.monthlyReport': '월간 리포트',
+    'settings.monthlyReportDesc': '월간 분석 및 인사이트',
+    'settings.socialAccountSettings': '소셜 계정 설정',
+    'settings.notConnected': '연결되지 않음',
+    'settings.connect': '연결',
+    'settings.disconnect': '연결 해제',
+    'settings.billingSettings': '결제 설정',
+    'settings.currentPlan': '현재 플랜',
+    'settings.upgrade': '업그레이드',
+    'settings.nextBilling': '다음 결제일',
+    'settings.dangerZoneTitle': '위험 구역',
+    'settings.deleteAccount': '계정 삭제',
+    'settings.deleteAccountWarning': '이 작업은 되돌릴 수 없습니다. 모든 데이터가 영구적으로 삭제됩니다.',
+    'settings.loading': '설정 로딩 중...',
+    
+    // Auth
+    'auth.welcomeBack': '다시 오신 것을 환영합니다',
+    'auth.signInContinue': '대시보드로 계속하려면 로그인하세요',
+    'auth.continueWithGoogle': '구글로 계속하기',
+    'auth.signingIn': '로그인 중...',
+    'auth.or': '또는',
+    'auth.noAccount': '계정이 없으신가요?',
+    'auth.signUpFree': '무료로 가입하기',
+    'auth.byContinuing': '계속하면 다음에 동의하는 것입니다',
+    'auth.termsOfService': '이용약관',
+    'auth.and': '및',
+    'auth.privacyPolicy': '개인정보처리방침',
+    'auth.createAccount': '계정 만들기',
+    'auth.getStarted': '무료 계정으로 시작하세요',
+    'auth.alreadyHaveAccount': '이미 계정이 있으신가요?',
+    'auth.signIn': '로그인',
+    'auth.startForFree': '무료로 시작하기',
+    'auth.joinThousands': '소셜미디어를 자동화하는 수천 명과 함께하세요',
+    'auth.freePlanIncludes': '무료 플랜 포함 사항:',
+    'auth.freePostsMonth': '월 10개 무료 게시물',
+    'auth.allTemplates': '모든 업종 템플릿',
+    'auth.autoScheduling': '자동 예약 발행',
+    'auth.basicAnalytics': '기본 분석',
+    'auth.signUpWithGoogle': '구글로 가입하기',
+    'auth.creatingAccount': '계정 생성 중...',
+    'auth.signOut': '로그아웃',
+    'auth.completing': '로그인을 완료하고 있습니다...',
+    'auth.pleaseWait': '계정을 설정하는 동안 잠시 기다려주세요',
+    'auth.signInSuccessful': '로그인 성공!',
+    'auth.redirecting': '대시보드로 이동 중...',
+    'auth.signInFailed': '로그인 실패',
+    'auth.closeWindow': '창 닫기',
+    'auth.bySigningUp': '가입하면 다음에 동의하는 것입니다',
+    
+    // Navigation
+    'nav.dashboard': '대시보드',
+    'nav.generate': '콘텐츠 생성',
+    'nav.schedule': '스케줄',
+    'nav.analytics': '분석',
+    'nav.posts': '게시물',
+    'nav.settings': '설정',
+    
+    // Common
+    'common.guest': '게스트',
+    'common.professional': '전문적',
+    'common.casual': '캐주얼',
+    'common.friendly': '친근한',
+    'common.serious': '진지한',
+    'common.inspiring': '영감을 주는',
+    'common.formalAuth': '공식적이고 권위적인',
+    'common.selectPlatform': '온보딩에서 선택됨',
+    'common.changeAvailable': '변경 가능일',
+    'common.scheduled': '예약됨',
+    'common.at': '에',
+    'common.failedToLoad': '대시보드를 불러오지 못했습니다',
+    'common.tryAgain': '다시 시도',
+    'common.productivity': '생산성',
+    'common.creativeProcess': '창작 과정',
+    'common.more': '더보기',
+    'common.short': '짧게',
+    'common.medium': '보통',
+    'common.long': '길게',
+    'common.characters.short': '50-100자',
+    'common.characters.medium': '100-200자',
+    'common.characters.long': '200자 이상',
+    'common.tryAgain': '다시 시도',
+    'common.cancel': '취소',
+    'common.comingSoon': '곧 출시',
+    'common.selectPlatform': '온보딩에서 선택됨',
+    'common.changeAvailable': '변경 가능 날짜',
+    'common.pleaseComplete': '플랫폼을 선택하려면 온보딩을 완료하세요.',
+    'common.failedToLoad': '대시보드 로드 실패',
+    'common.authRequired': '인증이 필요합니다',
+    'common.failedToGenerate': '콘텐츠 생성 실패',
+    'common.deleteConfirm': '"DELETE"를 입력하여 확인',
+    'common.professional': '전문적',
+    'common.casual': '캐주얼',
+    'common.friendly': '친근한',
+    'common.humorous': '유머러스한',
+    'common.serious': '진지한',
+    'common.inspiring': '영감을 주는',
+    'common.formalAuth': '공식적이고 권위있는',
+    'common.productivity': '생산성',
+    'common.creativeProcess': '창작 과정',
+    'common.shareThoughts': '280자로 생각을 공유하세요',
+    'common.postsPerMonth.10': '월 10개 게시물',
+    'common.postsPerMonth.100': '월 100개 게시물',
+    'common.postsPerMonth.500': '월 500개 게시물',
+    'common.xTwitter': 'X (Twitter)',
+    'common.threads': 'Threads',
+    
+    // Timezones
+    'timezone.seoul': '서울 (UTC+9)',
+    'timezone.newYork': '뉴욕 (UTC-5)',
+    'timezone.losAngeles': '로스앤젤레스 (UTC-8)',
+    'timezone.london': '런던 (UTC+0)',
   }
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en')
-  const [isHydrated, setIsHydrated] = useState(false)
+interface LanguageProviderProps {
+  children: ReactNode
+  initialLanguage?: Language
+}
+
+export function LanguageProvider({ children, initialLanguage }: LanguageProviderProps) {
+  // 서버에서 제공된 초기 언어 또는 기본값 사용
+  const [language, setLanguage] = useState<Language>(initialLanguage || 'ko')
+  const [isHydrated, setIsHydrated] = useState(true) // 서버 초기화로 즉시 사용 가능
 
   useEffect(() => {
-    // 클라이언트에서만 브라우저 언어 감지
-    const browserLang = navigator.language.toLowerCase()
-    const detectedLang = browserLang.startsWith('ko') ? 'ko' : 'en'
-    setLanguage(detectedLang)
-    setIsHydrated(true)
-  }, [])
+    // 클라이언트에서만 실행되는 최종 동기화
+    let detectedLanguage = language // 서버에서 설정된 초기값 유지
+    
+    // 저장된 언어 설정이 초기 언어와 다르면 업데이트
+    const savedLanguage = getStoredLanguage()
+    if (savedLanguage && savedLanguage !== language) {
+      detectedLanguage = savedLanguage
+      setLanguage(detectedLanguage)
+    }
+    
+    // 쿠키와 로컬스토리지 동기화
+    setLanguageCookie(detectedLanguage)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('typify-language', detectedLanguage)
+    }
+  }, [language, initialLanguage])
+
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang)
+    setLanguageCookie(lang)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('typify-language', lang)
+    }
+  }
 
   const toggleLanguage = () => {
-    setLanguage(prev => prev === 'en' ? 'ko' : 'en')
+    const newLang = language === 'en' ? 'ko' : 'en'
+    handleSetLanguage(newLang)
   }
 
   const t = (key: string): string => {
@@ -432,7 +1014,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t, isHydrated }}>
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, toggleLanguage, t, isHydrated }}>
       {children}
     </LanguageContext.Provider>
   )

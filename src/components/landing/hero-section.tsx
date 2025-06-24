@@ -16,7 +16,7 @@ export function HeroSection() {
       {/* Noise texture */}
       <div className="noise absolute inset-0" />
 
-      <div className="container-narrow mx-auto px-4 pt-20">
+      <div className="container-narrow mx-auto px-4 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

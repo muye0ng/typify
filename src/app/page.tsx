@@ -1,3 +1,4 @@
+'use client'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { HeroSection } from '@/components/landing/hero-section'
@@ -11,10 +12,10 @@ import { CTASection } from '@/components/landing/cta-section'
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <>
       <Header />
-      
-      <main>
+      <div className="min-h-screen">
+        <main>
         <HeroSection />
         
         <section id="problems">
@@ -42,7 +43,8 @@ export default function Home() {
         <CTASection />
       </main>
       
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </>
   )
 }
