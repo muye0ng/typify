@@ -5,7 +5,7 @@ import { Clock, Lightbulb, TrendingDown } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 
 export function ProblemSection() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   const problems = [
     {
@@ -39,7 +39,7 @@ export function ProblemSection() {
         >
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             {t('problem.title').split('\n').map((line, index) => (
-              <span key={index} className="block">
+              <span key={`title-${language}-${index}`} className="block">
                 {index === 0 ? (
                   <span className="text-foreground">{line}</span>
                 ) : (
@@ -58,7 +58,7 @@ export function ProblemSection() {
             const Icon = problem.icon
             return (
               <motion.div
-                key={index}
+                key={`problem-${language}-${index}`}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -92,7 +92,7 @@ export function ProblemSection() {
             </h3>
             <p className="text-lg md:text-xl text-foreground-secondary leading-relaxed">
               {t('problem.solution.desc').split('\n').map((line, index) => (
-                <span key={index} className="block">
+                <span key={`solution-${language}-${index}`} className="block">
                   {line}
                 </span>
               ))}

@@ -142,10 +142,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           provider: 'google',
           options: {
             skipBrowserRedirect: true,
-            redirectTo: `${window.location.origin}/auth/callback`
+            redirectTo: `${window.location.origin}/auth/callback`,
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'consent',
+            }
           }
         }).then(({ data, error }) => {
           if (error) {
+            console.error('OAuth initialization error:', error)
             setIsLoading(false)
             reject(error)
             return
@@ -167,74 +172,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             popup.focus()
 
-            // Monitor popup for completion (safer method)
-            const checkClosed = setInterval(() => {
-              try {
-                if (popup.closed) {
-                  clearInterval(checkClosed)
-                  setIsLoading(false)
-                  reject(new Error('로그인이 취소되었습니다.'))
-                }
-              } catch (e) {
-                // Ignore Cross-Origin-Opener-Policy errors
-                console.log('Popup closed check blocked by COOP policy')
+            // Listen for success message from callback
+            const messageHandler = (event: MessageEvent) => {
+              if (event.origin !== window.location.origin) return
+              
+              if (event.data.type === 'SUPABASE_AUTH_SUCCESS') {
+                console.log('Received auth success message')
+                cleanup()
+                setIsLoading(false)
+                resolve()
               }
-            }, 1000)
+            }
+            
+            // Cleanup function
+            const cleanup = () => {
+              window.removeEventListener('message', messageHandler)
+              if (timeoutId) clearTimeout(timeoutId)
+            }
+            
+            window.addEventListener('message', messageHandler)
 
-            // Poll for Supabase session changes
-            const authCheckInterval = setInterval(async () => {
-              try {
-                const { data: { session } } = await supabase.auth.getSession()
-                
-                if (session?.user) {
-                  clearInterval(checkClosed)
-                  clearInterval(authCheckInterval)
-                  popup.close()
-                  
-                  // Set user data
-                  setSupabaseUser(session.user)
-                  
-                  // Create user profile if it doesn't exist
-                  try {
-                    const { data: profile } = await supabase
-                      .from('user_profiles')
-                      .select('id')
-                      .eq('id', session.user.id)
-                      .single()
-                    
-                    if (!profile) {
-                      // Create new user profile
-                      await supabase
-                        .from('user_profiles')
-                        .insert({
-                          id: session.user.id,
-                          email: session.user.email || '',
-                          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email || 'User',
-                          avatar_url: session.user.user_metadata?.avatar_url,
-                          plan: 'free',
-                          monthly_posts_used: 0,
-                          monthly_posts_limit: 10,
-                          onboarding_completed: false
-                        })
-                    }
-                  } catch (profileError) {
-                    console.error('Profile creation error:', profileError)
-                  }
-                  
-                  await fetchUserProfile(session.user.id)
-                  
-                  // Navigate to appropriate page
-                  const currentUser = user || await getUserFromProfile(session.user.id)
-                  const redirectUrl = currentUser?.onboarding_completed ? '/dashboard' : '/dashboard/onboarding'
-                  window.location.href = redirectUrl
-                  
-                  setIsLoading(false)
-                  resolve()
-                }
-              } catch (error) {
-                console.error('Session check error:', error)
-              }
-            }, 1000)
+            // 5분 타임아웃
+            const timeoutId = setTimeout(() => {
+              cleanup()
+              setIsLoading(false)
+              reject(new Error('로그인 시간이 초과되었습니다.'))
+            }, 300000)
           }
         })
       })
@@ -276,17 +239,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      // 바로 리다이렉트 (UI 변화 없이)
+      window.location.href = '/'
+      
+      // 백그라운드에서 로그아웃 처리
       const { error } = await supabase.auth.signOut()
       if (error) {
-        throw error
+        console.error('Logout error:', error)
       }
-      
-      setUser(null)
-      setSupabaseUser(null)
-      window.location.href = '/'
     } catch (error) {
       console.error('Logout failed:', error)
-      throw error
+      // 에러가 있어도 메인 페이지로 리다이렉트
+      window.location.href = '/'
     }
   }
 

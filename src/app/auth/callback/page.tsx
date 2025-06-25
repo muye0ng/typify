@@ -9,74 +9,92 @@ import { AlertCircle, Loader2 } from 'lucide-react'
 
 function AuthCallbackContent() {
   const router = useRouter()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [error, setError] = useState<string>('')
 
   useEffect(() => {
+    let isMounted = true
+    
     const handleCallback = async () => {
       try {
-        // Handle PKCE callback
-        const hashParams = new URLSearchParams(window.location.hash.substring(1))
-        const urlParams = new URLSearchParams(window.location.search)
+        console.log('=== AUTH CALLBACK STARTED ===')
+        console.log('Current URL:', window.location.href)
         
-        // Check for error first
-        const error = hashParams.get('error') || urlParams.get('error')
-        const errorDescription = hashParams.get('error_description') || urlParams.get('error_description')
+        const urlParams = new URLSearchParams(window.location.search)
+        const error = urlParams.get('error')
+        
+        console.log('URL search params:', urlParams.toString())
+        console.log('Error param:', error)
         
         if (error) {
-          console.error('OAuth Error:', { error, errorDescription, hash: window.location.hash, search: window.location.search })
-          
-          // If it's a database error, we can still try to continue
-          if (error === 'server_error' && errorDescription?.includes('Database error saving new user')) {
-            console.warn('Database error detected, attempting to continue with OAuth...')
-            // Don't throw error, continue with OAuth flow
-          } else {
-            throw new Error(errorDescription || error)
-          }
+          console.log('Error found in URL:', error)
+          throw new Error(urlParams.get('error_description') || error)
         }
 
-        // Handle Supabase OAuth callback
-        const { data, error: sessionError } = await supabase.auth.exchangeCodeForSession(window.location.href)
+        // URL에서 code 가져오기
+        const code = urlParams.get('code')
+        console.log('Auth code found:', !!code)
+        console.log('Code value:', code?.substring(0, 20) + '...')
         
-        if (sessionError) {
-          console.error('Session Error:', sessionError)
-          throw sessionError
+        if (code && isMounted) {
+          console.log('Auth code found - setting up auth listener')
+          
+          // 바로 세션 변화 감지 시작 (getSession 호출 제거)
+          let resolved = false
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event, !!session)
+            
+            if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !resolved) {
+              resolved = true
+              console.log('Login successful!')
+              setStatus('success')
+              
+              if (window.opener) {
+                window.opener.postMessage({ type: 'SUPABASE_AUTH_SUCCESS' }, window.location.origin)
+                setTimeout(() => window.close(), 100)
+              } else {
+                window.close()
+              }
+              
+              subscription.unsubscribe()
+            }
+          })
+          
+          // 3초 후에도 로그인 안되면 에러
+          setTimeout(() => {
+            if (!resolved) {
+              console.log('Auth timeout - no session detected')
+              subscription.unsubscribe()
+              setError('로그인 시간이 초과되었습니다.')
+              setStatus('error')
+            }
+          }, 3000)
+          
+          return
         }
 
-        if (data?.session?.user) {
-          setStatus('success')
-          
-          // For popup: just close the window
-          // The main window will detect the session via polling
-          setTimeout(() => {
-            window.close()
-          }, 1000)
-        } else {
-          throw new Error('No session found after authentication')
-        }
+        // code가 없거나 실패한 경우
+        throw new Error('No authorization code found')
         
       } catch (err) {
+        console.log('=== CAUGHT ERROR IN CALLBACK ===')
         console.error('Auth callback error:', err)
-        const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
-        console.log('Full error details:', {
-          error: err,
-          url: window.location.href,
-          hash: window.location.hash,
-          search: window.location.search
-        })
-        setError(errorMessage)
-        setStatus('error')
-
-        // For popup error: just close the window
-        setTimeout(() => {
-          window.close()
-        }, 2000)
+        console.error('Error type:', typeof err)
+        console.error('Error details:', err)
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Authentication failed')
+          setStatus('error')
+        }
       }
     }
 
     handleCallback()
-  }, [router])
+    
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background-secondary to-background">
@@ -98,8 +116,8 @@ function AuthCallbackContent() {
             <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">T</span>
             </div>
-            <h1 className="text-2xl font-bold text-green-600">{t('auth.signInSuccessful')}</h1>
-            <p className="text-foreground-secondary">{t('auth.redirecting')}</p>
+            <h1 className="text-2xl font-bold text-green-600">로그인 성공!</h1>
+            <p className="text-foreground-secondary">로그인이 완료되었습니다!</p>
           </>
         )}
 
@@ -112,9 +130,9 @@ function AuthCallbackContent() {
             <p className="text-foreground-secondary">{error}</p>
             <button
               onClick={() => window.close()}
-              className="mt-4 px-4 py-2 bg-surface hover:bg-surface-hover rounded-lg transition-colors"
+              className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
             >
-              {t('auth.closeWindow')}
+              창 닫기
             </button>
           </>
         )}

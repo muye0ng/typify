@@ -6,7 +6,7 @@ import { Check, Crown, Zap, Star } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 
 export function PricingSection() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   const plans = [
     {
@@ -68,7 +68,7 @@ export function PricingSection() {
         >
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             {t('pricing.title').split('\n').map((line, index) => (
-              <span key={index} className="block">
+              <span key={`title-${language}-${index}`} className="block">
                 {index === 0 ? (
                   <span className="text-foreground">{line}</span>
                 ) : (
@@ -87,7 +87,7 @@ export function PricingSection() {
             const Icon = plan.icon
             return (
               <motion.div
-                key={index}
+                key={`pricing-${language}-${index}`}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -178,7 +178,7 @@ export function PricingSection() {
                     <ul className="space-y-3">
                       {plan.features.map((feature, featureIndex) => (
                         <li
-                          key={featureIndex}
+                          key={`feature-${language}-${featureIndex}`}
                           className="flex items-start gap-3 text-foreground-secondary"
                         >
                           <Check className="w-4 h-4 text-green-400 mt-1 flex-shrink-0" />
@@ -195,7 +195,7 @@ export function PricingSection() {
                         <ul className="space-y-2">
                           {plan.limitations.map((limitation, limitIndex) => (
                             <li
-                              key={limitIndex}
+                              key={`limit-${language}-${limitIndex}`}
                               className="text-xs text-foreground-tertiary leading-relaxed"
                             >
                               • {limitation}

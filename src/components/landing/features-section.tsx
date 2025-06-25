@@ -5,7 +5,7 @@ import { Brain, Calendar, TrendingUp, Zap } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 
 export function FeaturesSection() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   
   const features = [
     {
@@ -49,7 +49,7 @@ export function FeaturesSection() {
         >
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8">
             {t('features.title').split('\n').map((line, index) => (
-              <span key={index} className="block">
+              <span key={`title-${language}-${index}`} className="block">
                 {index === 0 ? (
                   <span className="text-foreground">{line}</span>
                 ) : (
@@ -63,12 +63,12 @@ export function FeaturesSection() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-12 max-w-7xl mx-auto mb-20">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-12 max-w-7xl mx-auto mb-20 px-4 md:px-0">
           {features.map((feature, index) => {
             const Icon = feature.icon
             return (
               <motion.div
-                key={index}
+                key={`feature-${language}-${index}`}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}

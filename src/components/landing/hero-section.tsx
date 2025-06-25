@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { useLanguage } from '@/contexts/language-context'
 
 export function HeroSection() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -63,16 +63,17 @@ export function HeroSection() {
 
           {/* CTA Buttons */}
           <motion.div
+            key={`cta-buttons-${language}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Button size="lg" className="group">
+            <Button size="lg" className="group" key={`primary-${language}`}>
               {t('hero.cta.primary')}
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
-            <Button size="lg" variant="secondary">
+            <Button size="lg" variant="secondary" key={`secondary-${language}`}>
               {t('hero.cta.secondary')}
             </Button>
           </motion.div>

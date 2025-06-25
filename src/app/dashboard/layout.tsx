@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
@@ -48,6 +48,37 @@ export default function DashboardLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isLangOpen, setIsLangOpen] = useState(false)
+  
+  // 인증 체크
+  useEffect(() => {
+    if (!authLoading && !authUser) {
+      // 로그인되지 않은 상태면 메인 페이지로 리다이렉트
+      router.push('/')
+      return
+    }
+    
+    if (authUser && !authUser.onboarding_completed && pathname !== '/dashboard/onboarding') {
+      // 온보딩이 완료되지 않은 경우 온보딩 페이지로 리다이렉트
+      router.push('/dashboard/onboarding')
+      return
+    }
+  }, [authUser, authLoading, router, pathname])
+
+  // 로딩 중이거나 인증되지 않은 경우 로딩 화면 표시
+  if (authLoading || !authUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-accent to-accent-secondary rounded-2xl flex items-center justify-center animate-pulse">
+            <span className="text-white font-bold text-xl">T</span>
+          </div>
+          <p className="text-foreground-secondary">
+            {authLoading ? t('dashboard.loading') : t('auth.redirecting')}
+          </p>
+        </div>
+      </div>
+    )
+  }
   
   // Use authenticated user data or show loading
   const user: User = authUser ? {

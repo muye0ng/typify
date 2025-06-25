@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { LoginModal } from '@/components/ui/login-modal'
 import { SignupModal } from '@/components/ui/signup-modal'
 import { Menu, X, Globe, ChevronDown, User, LogOut, LayoutDashboard } from 'lucide-react'
-import { AnimatePresence, motion } from 'framer-motion'
 import { useLanguage } from '@/contexts/language-context'
 import { useAuth } from '@/lib/auth'
 
@@ -25,15 +24,30 @@ export function Header() {
       if (event.origin !== window.location.origin) return
       
       if (event.data.type === 'SUPABASE_AUTH_SUCCESS') {
+        console.log('Auth success message received')
         setIsLoginModalOpen(false)
         setIsSignupModalOpen(false)
-        // Refresh page to update auth state
-        window.location.reload()
+        // 로그인 성공 시 즉시 대시보드로 리다이렉트
+        window.location.href = '/dashboard'
       }
     }
 
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.language-dropdown') && !target.closest('.user-dropdown')) {
+        setIsLangOpen(false)
+        setIsUserMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const navItems = [
@@ -61,7 +75,7 @@ export function Header() {
   return (
     <header
       style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, width: '100%' }}
-      className={`fixed transition-all duration-300 backdrop-blur-2xl bg-background/80 border-b border-border`}
+      className={`fixed backdrop-blur-2xl bg-background/80 border-b border-border`}
     >
       <div className="container-wide mx-auto px-4">
         <div className="flex items-center justify-between h-16">
@@ -93,7 +107,7 @@ export function Header() {
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
             {/* Language Selector */}
-            <div className="relative">
+            <div className="relative language-dropdown">
               <Button
                 variant="ghost"
                 size="sm"
@@ -107,14 +121,10 @@ export function Header() {
                 <ChevronDown className="h-3 w-3" />
               </Button>
               
-              <AnimatePresence>
-                {isLangOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full mt-2 right-0 w-32 card p-2 bg-surface border border-border z-50"
-                  >
+              {isLangOpen && (
+                <div
+                  className="absolute top-full mt-2 right-0 w-32 card p-2 bg-surface border border-border z-50"
+                >
                     <button
                       onClick={() => {
                         setLanguage('en')
@@ -137,13 +147,12 @@ export function Header() {
                     >
                       한국어
                     </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                </div>
+              )}
             </div>
             
             {/* 로그인 상태에 따른 조건부 렌더링 */}
-            {!authLoading && user ? (
+            {user && !authLoading ? (
               // 로그인된 상태: 사용자 정보 + 대시보드 버튼
               <>
                 <Link href="/dashboard">
@@ -153,7 +162,7 @@ export function Header() {
                   </Button>
                 </Link>
                 
-                <div className="relative">
+                <div className="relative user-dropdown">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -163,35 +172,30 @@ export function Header() {
                     <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                       <User className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-sm">{user.name}</span>
+                    <span className="text-sm">{user.name || user.email?.split('@')[0] || 'User'}</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                   
-                  <AnimatePresence>
-                    {isUserMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full mt-2 right-0 w-48 card p-2 bg-surface border border-border z-50"
-                      >
+                  {isUserMenuOpen && (
+                    <div
+                      className="absolute top-full mt-2 right-0 w-48 card p-2 bg-surface border border-border z-50"
+                    >
                         <div className="px-3 py-2 border-b border-border mb-2">
-                          <p className="text-sm font-medium">{user.name}</p>
+                          <p className="text-sm font-medium">{user.name || user.email?.split('@')[0] || 'User'}</p>
                           <p className="text-xs text-foreground-secondary">{user.email}</p>
                         </div>
                         <button
-                          onClick={() => {
-                            logout()
+                          onClick={async () => {
                             setIsUserMenuOpen(false)
+                            await logout()
                           }}
                           className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-surface-hover rounded transition-colors text-red-500"
                         >
                           <LogOut className="w-4 h-4" />
                           {t('auth.signOut')}
                         </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -214,27 +218,64 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden"
-          >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+          {/* Mobile Language + Menu Buttons */}
+          <div className="flex items-center gap-2 md:hidden">
+            {/* Mobile Language Selector */}
+            <div className="relative language-dropdown">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsLangOpen(!isLangOpen)}
+                className="relative"
+              >
+                <Globe className="h-5 w-5" />
+              </Button>
+              
+              {isLangOpen && (
+                <div className="absolute top-full mt-2 right-0 w-32 rounded-lg border border-border bg-background/95 backdrop-blur-xl shadow-lg z-50 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setLanguage('en')
+                      setIsLangOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                      language === 'en' ? 'text-foreground bg-surface-hover' : 'text-foreground-secondary hover:bg-surface-hover hover:text-foreground'
+                    }`}
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLanguage('ko')
+                      setIsLangOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                      language === 'ko' ? 'text-foreground bg-surface-hover' : 'text-foreground-secondary hover:bg-surface-hover hover:text-foreground'
+                    }`}
+                  >
+                    한국어
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-border backdrop-blur-2xl bg-background/98"
-          >
+      {isMenuOpen && (
+        <div
+          className="md:hidden border-t border-border backdrop-blur-2xl bg-background/98"
+        >
             <div className="container px-4 py-6 space-y-4">
               {navItems.map((item) => (
                 <a
@@ -251,7 +292,7 @@ export function Header() {
               ))}
               <div className="flex flex-col gap-3 pt-4 border-t border-border">
                 {/* 모바일: 로그인 상태에 따른 조건부 렌더링 */}
-                {!authLoading && user ? (
+                {user && !authLoading ? (
                   // 로그인된 상태
                   <>
                     <div className="flex items-center gap-3 p-3 bg-surface-hover rounded-lg">
@@ -259,7 +300,7 @@ export function Header() {
                         <User className="w-4 h-4 text-white" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium">{user.name}</p>
+                        <p className="text-sm font-medium">{user.name || user.email?.split('@')[0] || 'User'}</p>
                         <p className="text-xs text-foreground-secondary">{user.email}</p>
                       </div>
                     </div>
@@ -272,9 +313,9 @@ export function Header() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        logout()
+                      onClick={async () => {
                         setIsMenuOpen(false)
+                        await logout()
                       }}
                       className="w-full gap-2 text-red-500 hover:text-red-400"
                     >
@@ -308,35 +349,10 @@ export function Header() {
                     </Button>
                   </>
                 )}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setLanguage('en')
-                      setIsMenuOpen(false)
-                    }}
-                    className={`flex-1 px-3 py-2 rounded text-sm transition-colors ${
-                      language === 'en' ? 'bg-surface-hover text-foreground' : 'text-foreground-secondary hover:text-foreground'
-                    }`}
-                  >
-                    English
-                  </button>
-                  <button
-                    onClick={() => {
-                      setLanguage('ko')
-                      setIsMenuOpen(false)
-                    }}
-                    className={`flex-1 px-3 py-2 rounded text-sm transition-colors ${
-                      language === 'ko' ? 'bg-surface-hover text-foreground' : 'text-foreground-secondary hover:text-foreground'
-                    }`}
-                  >
-                    한국어
-                  </button>
-                </div>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Login Modal */}
       <LoginModal 

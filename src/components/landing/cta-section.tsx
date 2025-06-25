@@ -6,7 +6,7 @@ import { ArrowRight, Sparkles, Zap } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 
 export function CTASection() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   return (
     <section className="py-24 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-accent/10 to-primary/20" />
@@ -89,7 +89,7 @@ export function CTASection() {
                 </h3>
                 <p className="text-sm text-foreground-secondary">
                   {t('cta.feature1.desc').split('\n').map((line, index) => (
-                    <span key={index}>
+                    <span key={`feature1-${language}-${index}`}>
                       {line}
                       {index < t('cta.feature1.desc').split('\n').length - 1 && <br />}
                     </span>
@@ -106,7 +106,7 @@ export function CTASection() {
                 </h3>
                 <p className="text-sm text-foreground-secondary">
                   {t('cta.feature2.desc').split('\n').map((line, index) => (
-                    <span key={index}>
+                    <span key={`feature2-${language}-${index}`}>
                       {line}
                       {index < t('cta.feature2.desc').split('\n').length - 1 && <br />}
                     </span>
@@ -123,7 +123,7 @@ export function CTASection() {
                 </h3>
                 <p className="text-sm text-foreground-secondary">
                   {t('cta.feature3.desc').split('\n').map((line, index) => (
-                    <span key={index}>
+                    <span key={`feature3-${language}-${index}`}>
                       {line}
                       {index < t('cta.feature3.desc').split('\n').length - 1 && <br />}
                     </span>

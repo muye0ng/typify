@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import * as React from 'react'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/contexts/language-context'
 import { useAuth } from '@/lib/auth'
@@ -16,7 +16,7 @@ interface SignupModalProps {
 
 export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalProps) {
   const { login } = useAuth()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -25,11 +25,14 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
       setIsLoading(true)
       setError('')
       await login()
-      // onClose() - 로그인 성공시 모달은 OAuth 완료 후 자동으로 닫힘
+      // 회원가입 성공 - 모달은 메시지 리스너에 의해 자동으로 닫힘
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Signup failed')
-    } finally {
+      console.error('Signup error:', err)
       setIsLoading(false)
+      // 실제 에러만 표시 (팝업 취소는 에러가 아님)
+      if (err instanceof Error && !err.message.includes('취소')) {
+        setError(err.message)
+      }
     }
   }
 
@@ -39,6 +42,50 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
     }
   }
 
+  // 특정 영역만 블러 처리
+  React.useEffect(() => {
+    if (isOpen) {
+      // 헤더 제외한 메인 콘텐츠 영역만 블러
+      const mainContent = document.querySelector('main')
+      const footer = document.querySelector('footer')
+      
+      if (mainContent) {
+        mainContent.style.filter = 'blur(4px)'
+        mainContent.style.pointerEvents = 'none'
+      }
+      if (footer) {
+        footer.style.filter = 'blur(4px)'
+        footer.style.pointerEvents = 'none'
+      }
+    } else {
+      const mainContent = document.querySelector('main')
+      const footer = document.querySelector('footer')
+      
+      if (mainContent) {
+        mainContent.style.filter = 'none'
+        mainContent.style.pointerEvents = 'auto'
+      }
+      if (footer) {
+        footer.style.filter = 'none'
+        footer.style.pointerEvents = 'auto'
+      }
+    }
+
+    return () => {
+      const mainContent = document.querySelector('main')
+      const footer = document.querySelector('footer')
+      
+      if (mainContent) {
+        mainContent.style.filter = 'none'
+        mainContent.style.pointerEvents = 'auto'
+      }
+      if (footer) {
+        footer.style.filter = 'none'
+        footer.style.pointerEvents = 'auto'
+      }
+    }
+  }, [isOpen])
+
   const benefits = [
     t('auth.freePostsMonth'),
     t('auth.allTemplates'),
@@ -47,24 +94,17 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
   ]
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
         <>
           {/* Backdrop with glassmorphism */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             onClick={handleBackdropClick}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed top-0 left-0 right-0 bottom-0 z-[10000] bg-black/60 flex items-center justify-center p-4 min-h-screen"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", duration: 0.3 }}
+            <div
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-md max-h-[90vh] overflow-y-auto"
+              className="relative w-full max-w-md max-h-[90vh] overflow-y-auto min-w-[320px]"
             >
               {/* Glassmorphism card with original design */}
               <div className="relative overflow-hidden rounded-2xl backdrop-blur-xl bg-gradient-to-br from-background/90 via-background-secondary/90 to-background/90 border border-white/10 shadow-2xl">
@@ -73,8 +113,12 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                 
                 {/* Close button */}
                 <button
-                  onClick={onClose}
-                  className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-surface/50 transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onClose()
+                  }}
+                  className="absolute top-4 right-4 z-50 p-2 rounded-full hover:bg-surface/50 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5 text-foreground" />
                 </button>
@@ -104,7 +148,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                       {t('auth.freePlanIncludes')}
                     </p>
                     {benefits.map((benefit, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm text-foreground-secondary">
+                      <div key={`benefit-${language}-${index}`} className="flex items-center gap-2 text-sm text-foreground-secondary">
                         <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
                         <span>{benefit}</span>
                       </div>
@@ -123,7 +167,7 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                   <div className="space-y-3">
                     <Button
                       size="lg"
-                      className="w-full relative group bg-gradient-to-r from-accent to-accent-secondary hover:from-accent/90 hover:to-accent-secondary/90"
+                      className="w-full relative group bg-gradient-to-r from-accent to-accent-secondary hover:from-accent/90 hover:to-accent-secondary/90 min-h-[48px] text-sm sm:text-base whitespace-nowrap"
                       onClick={handleGoogleSignup}
                       disabled={isLoading}
                     >
@@ -186,10 +230,10 @@ export function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
                   </p>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </>
       )}
-    </AnimatePresence>
+    </>
   )
 }

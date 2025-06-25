@@ -21,7 +21,9 @@
       "Bash(grep:*)",
       "Bash(npx tsc:*)",
       "Bash(comm:*)",
-      "WebFetch(domain:docs.anthropic.com)"
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:supabase.com)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": []
   }

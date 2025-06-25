@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useLanguage } from '@/contexts/language-context'
 
 export function FAQSection() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   
   const faqs = [
@@ -37,7 +37,7 @@ export function FAQSection() {
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             {t('faq.title').split('\n').map((line, index) => (
-              <span key={index} className="block">
+              <span key={`title-${language}-${index}`} className="block">
                 {index === 0 ? (
                   <span className="text-foreground">{line}</span>
                 ) : (
@@ -54,7 +54,7 @@ export function FAQSection() {
         <div className="max-w-3xl mx-auto">
           {faqs.map((faq, index) => (
             <motion.div
-              key={index}
+              key={`faq-${language}-${index}`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}

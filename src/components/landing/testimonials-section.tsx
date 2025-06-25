@@ -145,7 +145,7 @@ function TestimonialCard({ testimonial }: { testimonial: typeof testimonials[0] 
 }
 
 export function TestimonialsSection() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   // Duplicate testimonials for seamless loop
   const duplicatedTestimonials = [...testimonials, ...testimonials]
 
@@ -165,7 +165,7 @@ export function TestimonialsSection() {
         >
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             {t('testimonials.title').split('\\n').map((line, index) => (
-              <span key={index} className="block">
+              <span key={`title-${language}-${index}`} className="block">
                 {index === 0 ? (
                   <span className="text-foreground">{line}</span>
                 ) : (
@@ -201,7 +201,7 @@ export function TestimonialsSection() {
             >
               {duplicatedTestimonials.map((testimonial, index) => (
                 <TestimonialCard
-                  key={`${testimonial.name}-${index}`}
+                  key={`${testimonial.name}-${language}-${index}`}
                   testimonial={testimonial}
                 />
               ))}

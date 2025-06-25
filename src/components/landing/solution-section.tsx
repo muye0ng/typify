@@ -11,9 +11,9 @@ const steps = [
     title: 'solution.step1.title',
     description: 'solution.step1.desc',
     details: [
-      'X(Twitter), Threads account connection',
-      'Automatic collection of existing posts',
-      'Secure OAuth authentication'
+      'solution.step1.detail1',
+      'solution.step1.detail2',
+      'solution.step1.detail3'
     ]
   },
   {
@@ -22,9 +22,9 @@ const steps = [
     title: 'solution.step2.title',
     description: 'solution.step2.desc',
     details: [
-      'Personal writing style analysis',
-      'Preferred topics and keywords identification',
-      'Brand tone learning'
+      'solution.step2.detail1',
+      'solution.step2.detail2',
+      'solution.step2.detail3'
     ]
   },
   {
@@ -33,15 +33,15 @@ const steps = [
     title: 'solution.step3.title',
     description: 'solution.step3.desc',
     details: [
-      'Personalized content auto-generation',
-      'Optimal time analysis and scheduled posting',
-      'Performance analysis and improvement suggestions'
+      'solution.step3.detail1',
+      'solution.step3.detail2',
+      'solution.step3.detail3'
     ]
   }
 ]
 
 export function SolutionSection() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   return (
     <section className="section-spacing relative">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
@@ -56,7 +56,7 @@ export function SolutionSection() {
         >
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8">
             {t('solution.title').split('\n').map((line, index) => (
-              <span key={index} className="block">
+              <span key={`title-${language}-${index}`} className="block">
                 {index === 0 ? (
                   <span className="gradient-text">{line}</span>
                 ) : (
@@ -77,12 +77,12 @@ export function SolutionSection() {
             
             return (
               <motion.div
-                key={index}
+                key={`step-${language}-${index}`}
                 initial={{ opacity: 0, x: isEven ? -50 : 50 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.2 }}
                 viewport={{ once: true }}
-                className={`flex flex-col lg:flex-row items-center gap-16 mb-32 last:mb-0 ${
+                className={`flex flex-col lg:flex-row items-center gap-8 lg:gap-16 mb-20 lg:mb-32 last:mb-0 px-4 lg:px-0 ${
                   isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'
                 }`}
               >
@@ -108,11 +108,11 @@ export function SolutionSection() {
                     <ul className="space-y-4">
                       {step.details.map((detail, detailIndex) => (
                         <li
-                          key={detailIndex}
+                          key={`detail-${language}-${detailIndex}`}
                           className="flex items-center gap-4 text-lg text-foreground-secondary"
                         >
                           <div className="w-3 h-3 bg-accent rounded-full flex-shrink-0" />
-                          <span>{detail}</span>
+                          <span>{t(detail)}</span>
                         </li>
                       ))}
                     </ul>

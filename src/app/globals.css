@@ -51,6 +51,9 @@
 html {
   scroll-behavior: smooth !important;
   scroll-padding-top: 6rem !important; /* 헤더 높이 + 추가 여백 */
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 /* 앵커 링크 강제 스크롤 오프셋 */
@@ -69,6 +72,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 /* Glass morphism components */
